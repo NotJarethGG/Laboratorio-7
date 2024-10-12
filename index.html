@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Socket.IO UNA</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+      .chat-container {
+        height: calc(100vh - 80px);
+      }
+      .message-list {
+        max-height: calc(100vh - 160px);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+      <h1 class="text-3xl font-bold text-center mb-6 text-blue-600">Chat Socket.IO UNA</h1>
+      <div class="chat-container bg-white rounded-lg shadow-md flex flex-col">
+        <ul id="messages" class="message-list flex-grow overflow-y-auto p-4"></ul>
+        <form action="" class="bg-gray-200 p-4 rounded-b-lg">
+          <div class="flex space-x-2">
+            <input id="nombre" class="flex-grow p-2 rounded" autocomplete="off" placeholder="Nombre de usuario"/>
+            <input id="m" class="flex-grow p-2 rounded" autocomplete="off" placeholder="Escribe un mensaje" />
+            <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-300">Enviar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.js"></script>
+
+    <script>
+      var colorHexTxt = "";
+
+      function getRandomColor() {
+          var letters = '0123456789ABCDEF';
+          var color = '#';
+          for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+          }
+          return color;
+      }
+
+      $(function () {
+        var socket = io();
+
+        $('form').submit(function(e){
+          e.preventDefault();
+          var nombreTxt = $('#nombre').val() || "Anónimo";
+          var mensajeTxt = $('#m').val();
+
+          if (colorHexTxt == "") {
+            colorHexTxt = getRandomColor();
+          }
+
+          var jsonMsg = { nombre:nombreTxt, mensaje: mensajeTxt, color: colorHexTxt};
+
+          if (nombreTxt.trim() != "" && mensajeTxt.trim() != "") {
+            socket.emit('Evento-Mensaje-Server', JSON.stringify(jsonMsg));
+            $('#m').val('');
+          }
+        });
+
+        socket.on('Evento-Mensaje-Server', function(msg){
+          var msgJson = JSON.parse(msg);
+          var mensajeDisplay = `
+            <li class="mb-2">
+              <span class="font-bold" style="color:${msgJson.color}">${msgJson.nombre}</span>:
+              <span class="text-gray-700">${msgJson.mensaje}</span>
+            </li>
+          `;
+          $('#messages').append(mensajeDisplay);
+          $('.message-list').scrollTop($('.message-list')[0].scrollHeight);
+        });
+
+      });
+    </script>
+  </body>
+</html>
